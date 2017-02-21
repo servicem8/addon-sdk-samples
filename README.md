@@ -7,3 +7,6 @@ Find out more on the [ServiceM8 Developer portal](http://developer.servicem8.com
 
 # addon-sdk-samples
 ServiceM8 Addon SDK Sample Addons
+
+## hello-world-addon ##
+A simple addon to demonstrate the basics of the manifest and connecting to a lambda function. This addon will add a new job action 'Hello Action' to the job card, which will open a popup window and render your lambda function result.
