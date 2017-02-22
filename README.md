@@ -5,11 +5,11 @@ As each small business is different, each customer can extend their account with
 
 Find out more on the [ServiceM8 Developer portal](http://developer.servicem8.com/) or signup to [ServiceM8](https://www.servicem8.com).
 
-# addon-sdk-samples
-ServiceM8 Addon SDK Sample Addons
+# Addon SDK Samples
+Each folder contains an addon sdk sample project. You can load these into your ServiceM8 developer account and try them out, or use them as a starting point to your own add-on.
 
 ## hello-world-addon ##
-A simple addon to demonstrate the basics of the manifest and connecting to a lambda function. This addon will add a new job action 'Hello Action' to the job card, which will open a popup window and render your lambda function result.
+A simple addon to demonstrate the basics of the addon manifest.json file and connecting to a lambda function. This addon will add a new job action 'Hello Action' to the job card, which will open a popup window and render your lambda function result.
 
 #
 We hope you'll find those sample addons useful and encourage you to re-use some of this code in your own Addon. If you have any questions please email support@servicem8.com. Please submit bug reports to ServiceM8.
