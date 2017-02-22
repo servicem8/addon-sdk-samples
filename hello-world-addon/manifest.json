@@ -1,7 +1,7 @@
 {
 	"name": "Hello World Addon",
 	"version": "1.0",
-	"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+	"iconURL": "https:\/\/www.servicem8.com\/addon-sdk-sample-icon.png",
 	"supportURL": "https:\/\/support.exampleaddon.com",
 	"supportEmail": "support@exampleaddon.com",
 	"actions": [{
