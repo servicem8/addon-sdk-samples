@@ -11,5 +11,5 @@ ServiceM8 Addon SDK Sample Addons
 ## hello-world-addon ##
 A simple addon to demonstrate the basics of the manifest and connecting to a lambda function. This addon will add a new job action 'Hello Action' to the job card, which will open a popup window and render your lambda function result.
 
-
-We hope you'll find those sample addons useful and encourage you to re-use some of this code in your own Apps. If you have any questions please email support@servicem8.com. Please submit bug reports to ServiceM8.
+#
+We hope you'll find those sample addons useful and encourage you to re-use some of this code in your own Addon. If you have any questions please email support@servicem8.com. Please submit bug reports to ServiceM8.
