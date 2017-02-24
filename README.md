@@ -8,7 +8,7 @@ Find out more on the [ServiceM8 Developer portal](http://developer.servicem8.com
 # Addon SDK Samples
 Each folder contains an addon sdk sample project. You can load these into your ServiceM8 developer account and try them out, or use them as a starting point to your own add-on.
 
-## hello-world-addon ##
+## hello-world-addon (NodeJS & Python examples)##
 A simple addon to demonstrate the basics of the addon manifest.json file and connecting to a lambda function. This addon will add a new job action 'Hello Action' to the job card, which will open a popup window and render your lambda function result.
 
 #
