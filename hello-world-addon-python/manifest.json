@@ -1,0 +1,14 @@
+{
+	"name": "Hello World Addon",
+	"version": "1.0",
+	"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+	"supportURL": "https:\/\/support.exampleaddon.com",
+	"supportEmail": "support@exampleaddon.com",
+	"actions": [{
+		"name": "Hello Action",
+		"type": "online",
+		"entity": "job",
+		"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+		"event": "Hello_World_Event"
+	}]
+}
