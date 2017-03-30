@@ -1,0 +1,21 @@
+{
+	"name": "Showcase Addon",
+	"version": "1.0",
+	"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+	"supportURL": "https:\/\/support.exampleaddon.com",
+	"supportEmail": "support@exampleaddon.com",
+	"actions": [{
+		"name": "Showcase",
+		"type": "online",
+		"entity": "job",
+		"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+		"event": "Showcase_Main_Menu"
+	},
+	{
+		"name": "Showcase",
+		"type": "app",
+		"entity": "job",
+		"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+		"event": "Showcase_Main_Menu"
+	}]
+}
