@@ -1,0 +1,18 @@
+{
+    "name": "Webhook Addon",
+    "version": "1.0",
+    "iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+    "supportURL": "https:\/\/support.exampleaddon.com",
+    "supportEmail": "support@exampleaddon.com",
+    "oauth": {
+        "scope": "manage_jobs read_job_attachments publish_job_attachments"
+    },
+    "actions": [],
+    "menuItems": [],
+    "webhooks": [{
+        "object": "job",
+        "fields": [
+            "uuid"
+        ]}
+    ]
+}
