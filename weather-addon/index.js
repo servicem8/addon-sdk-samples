@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * ServiceM8 SDK Example: Attachment Add-on
+ * ServiceM8 SDK Example: Weather Add-on
  *
  * This example add-on adds a button to the Job Card which displays the weather for upcoming scheduled bookings.
  * Free weather data from OpenWeatherMap.org is used to provide the weather forecasts.
