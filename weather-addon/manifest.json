@@ -1,0 +1,23 @@
+{
+	"name": "Weather Addon",
+	"version": "1.0",
+	"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+	"supportURL": "https:\/\/support.exampleaddon.com",
+	"supportEmail": "support@exampleaddon.com",
+	"oauth": {
+		"scope": "read_jobs read_schedule"
+	},"actions": [{
+		"name": "Weather",
+		"type": "online",
+		"entity": "job",
+		"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+		"event": "show_weather_info"
+	},
+	{
+		"name": "Weather",
+		"type": "app",
+		"entity": "job",
+		"iconURL": "https:\/\/www.servicem8.com\/images\/addon-sdk-sample-icon.png",
+		"event": "show_weather_info"
+	}]
+}
