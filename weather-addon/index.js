@@ -38,7 +38,7 @@ exports.handler = (event, context, callback) => {
         return;
     }
 
-    // THis is the job which we're rendering weather for.
+    // This is the job which we're rendering weather for.
     var strJobUUID = event.eventArgs.jobUUID;
 
     /**
@@ -78,15 +78,16 @@ exports.handler = (event, context, callback) => {
             fltLng = objJob.lng;
 
         /**
-         * Next we fetch all JobActivitiy records for this job using the $filter parameter of the API.
+         * Next we fetch all JobActivity records which match this job UUID using the $filter parameter of the API.
          *
          * The JobActivity endpoint contains both Scheduled Bookings (activity_was_scheduled == 1) and
-         * recorded time from staff checking in and out of jobs (activity_was_scheduled == 0). We'll need to
-         * filter these out from the response, as we can only use one $filter parameter in a single request.
+         * recorded time from staff checking in and out of jobs (activity_was_scheduled == 0). We'll need manually
+         * exclude these from the response, as we can only use one $filter parameter in a single request.
          *
          */
         request.get({
-            url: 'https://api.servicem8.com/api_1.0/JobActivity.json?'  + encodeURIComponent('$filter') + '=' + encodeURIComponent('job_uuid eq \'' + strJobUUID + '\''),
+            url: 'https://api.servicem8.com/api_1.0/JobActivity.json?'
+                + encodeURIComponent('$filter') + '=' + encodeURIComponent('job_uuid eq \'' + strJobUUID + '\''),
             auth: {
                 bearer: event.auth.accessToken // Use the temporary Access Token that was issued for this event
             },
@@ -153,7 +154,7 @@ exports.handler = (event, context, callback) => {
                         }
 
                         /**
-                         * We need to account for timezone manually in order to write out a nicely-formatted date,
+                         * We need to account for timezone manually in order to write out the date in the *account's* timezone,
                          * as JavaScript date objects don't have a per-object "timezone" property. We determine the
                          * timezone of thisBooking.start_date by inspecting the last 4 characters and converting to
                          * integer minutes, then add that to the local timezone offset where this function is being
@@ -162,7 +163,6 @@ exports.handler = (event, context, callback) => {
                          */
                         let intTZDiff = (new Date()).getTimezoneOffset() + parseInt(thisBooking.start_date.substr(-4, 2)) * 60 + parseInt(thisBooking.start_date.substr(-2));
                         let objBookingTime = new Date();
-                        objBookingTime.setTime(intTimeMillis);
                         objBookingTime.setTime(intTimeMillis + intTZDiff * 60 * 1000);
 
                         // This will produce a string in the format "Wednesday, April 5, 7:00 AM" which is much more readable than "2017-04-05T07:00+0930"
@@ -199,7 +199,9 @@ exports.handler = (event, context, callback) => {
                     if (!strResult) {
                         strResult += '<p>No scheduled bookings for this job.</p>';
                     } else {
-                        strResult = '<h1>Scheduled Bookings for Job #' + objJob.generated_job_id + '</h1>' + strResult;
+                        strResult = '<h1>Scheduled Bookings for Job #' + objJob.generated_job_id + '</h1>'
+                            + strResult
+                            + '<p class="attribution">Weather data from <a href="//openweathermap.org">OpenWeatherMap</a>.</p>';
                     }
 
                     /**
