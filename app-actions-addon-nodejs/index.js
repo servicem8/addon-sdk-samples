@@ -14,17 +14,15 @@ exports.handler = (event, context, callback) => {
 		<script>
 			var client = SMClient.init();
 			
-			//Resize Addon Window
-			client.resizeWindow(500, 200);
-			
 		</script>
     </head>
     <body>
-		<h1>Hello World Lambda Event</h1>
+		<h1>Hello World Simple Function Event</h1>
 		
 		<p>You have opened job <b>` + strJobUUID + `</b></p>
 		
-		<button onClick="client.closeWindow();">Close Window</button>
+		<button onClick="client.closeWindow();">Return to App</button>
+			
 	</body>
 </html>`;
     
