@@ -93,13 +93,8 @@ exports.handler = async (event, context, callback) => {
                     const hour = now.getHours();
                     const minute = now.getMinutes();
                     
-                    // Only allow on Fridays
-                    if (now.getDay() !== 5) {
-                        resultEl.textContent = "Nice try! This only works on Fridays! 😉";
-                        resultEl.style.color = "#FF9800";
-                    } else {
-                        // Calculate probability based on time (increases as day progresses)
-                        // Start at 10% at noon, increase to 90% by 5 PM
+                    // Calculate probability based on time (increases as day progresses)
+                    // Start at 10% at noon, increase to 90% by 5 PM
                         const timeInMinutes = hour * 60 + minute;
                         const startTime = 12 * 60; // noon
                         const endTime = 17 * 60;   // 5 PM
@@ -143,3 +138,21 @@ exports.handler = async (event, context, callback) => {
     body: html,
   });
 };
+
+// Start the server if running directly (not as Lambda)
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.get('/', (req, res) => {
+    exports.handler({}, {}, (err, result) => {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send(result.body);
+      }
+    });
+  });
+  
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+}
