@@ -95,28 +95,27 @@ exports.handler = async (event, context, callback) => {
                     
                     // Calculate probability based on time (increases as day progresses)
                     // Start at 10% at noon, increase to 90% by 5 PM
-                        const timeInMinutes = hour * 60 + minute;
-                        const startTime = 12 * 60; // noon
-                        const endTime = 17 * 60;   // 5 PM
+                    const timeInMinutes = hour * 60 + minute;
+                    const startTime = 12 * 60; // noon
+                    const endTime = 17 * 60;   // 5 PM
+                    
+                    if (timeInMinutes < startTime) {
+                        resultEl.textContent = "Too early! Try again after noon! ⏰";
+                        resultEl.style.color = "#FF9800";
+                    } else {
+                        const probability = Math.min(0.9, 
+                            0.1 + (0.8 * (timeInMinutes - startTime) / (endTime - startTime))
+                        );
                         
-                        if (timeInMinutes < startTime) {
-                            resultEl.textContent = "Too early! Try again after noon! ⏰";
-                            resultEl.style.color = "#FF9800";
+                        // Roll the dice!
+                        const success = Math.random() < probability;
+                        
+                        if (success) {
+                            resultEl.textContent = "🎉 CONGRATULATIONS! You can leave early! 🎉";
+                            resultEl.style.color = "#4CAF50";
                         } else {
-                            const probability = Math.min(0.9, 
-                                0.1 + (0.8 * (timeInMinutes - startTime) / (endTime - startTime))
-                            );
-                            
-                            // Roll the dice!
-                            const success = Math.random() < probability;
-                            
-                            if (success) {
-                                resultEl.textContent = "🎉 CONGRATULATIONS! You can leave early! 🎉";
-                                resultEl.style.color = "#4CAF50";
-                            } else {
-                                resultEl.textContent = "Maybe next time! Keep working! 💪";
-                                resultEl.style.color = "#F44336";
-                            }
+                            resultEl.textContent = "Maybe next time! Keep working! 💪";
+                            resultEl.style.color = "#F44336";
                         }
                     }
                     
