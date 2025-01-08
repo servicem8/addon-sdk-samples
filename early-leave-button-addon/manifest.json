@@ -1,0 +1,19 @@
+{
+  "name": "Early Leave Button",
+  "description": "A fun button that determines if the team can leave early on Friday afternoons",
+  "version": "1.0.0",
+  "icon_url": "https://cdn-icons-png.flaticon.com/512/3589/3589030.png",
+  "author": "ServiceM8 Team",
+  "support_email": "support@servicem8.com",
+  "support_url": "https://www.servicem8.com/support",
+  "actions": [
+    {
+      "name": "early_leave_button",
+      "title": "Early Leave Button",
+      "description": "Try your luck for an early leave!",
+      "type": "online",
+      "entity": "company",
+      "event": "show_early_leave_button"
+    }
+  ]
+}
