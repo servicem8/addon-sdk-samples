@@ -7,7 +7,7 @@
 1. Signup a ServiceM8 Developer account [here](https://www.servicem8.com/developer-registration)
 2. Login, click Developer and add a new addon 'Hello world'
 3. Set your Addon Type to 'Simple function'
-4. Upload the manifest.json to your new addon
+4. Upload the manifest.json from this directory (hello-world-addon-nodejs/manifest.json) to your new addon
 5. Edit Function and paste index.js as your function code
 
 ## Enable the addon on your developer account
