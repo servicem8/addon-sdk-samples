@@ -1,7 +1,11 @@
 const express = require('express');
 const app = express();
 
-// Serve static files
+// Serve static files with no caching
+app.use((req, res, next) => {
+    res.header('Cache-Control', 'no-store');
+    next();
+});
 app.use(express.static('public'));
 app.use(express.json());
 
