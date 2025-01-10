@@ -1,5 +1,4 @@
 const express = require('express');
-const moment = require('moment');
 const app = express();
 
 // Serve static files
@@ -90,19 +89,25 @@ exports.handler = async (event, context, callback) => {
                     
                     // Get current time for probability calculation
                     const now = new Date();
-                    const hour = now.getHours();
-                    const minute = now.getMinutes();
                     
-                    // Calculate probability based on time (increases as day progresses)
-                    // Start at 10% at noon, increase to 90% by 5 PM
-                    const timeInMinutes = hour * 60 + minute;
-                    const startTime = 12 * 60; // noon
-                    const endTime = 17 * 60;   // 5 PM
-                    
-                    if (timeInMinutes < startTime) {
-                        resultEl.textContent = "Too early! Try again after noon! ⏰";
+                    // Only allow on Fridays
+                    if (now.getDay() !== 5) {
+                        resultEl.textContent = "Nice try! This only works on Fridays! 😉";
                         resultEl.style.color = "#FF9800";
                     } else {
+                        const hour = now.getHours();
+                        const minute = now.getMinutes();
+                        
+                        // Calculate probability based on time (increases as day progresses)
+                        // Start at 10% at noon, increase to 90% by 5 PM
+                        const timeInMinutes = hour * 60 + minute;
+                        const startTime = 12 * 60; // noon
+                        const endTime = 17 * 60;   // 5 PM
+                    
+                        if (timeInMinutes < startTime) {
+                            resultEl.textContent = "Too early! Try again after noon! ⏰";
+                            resultEl.style.color = "#FF9800";
+                        } else {
                         const probability = Math.min(0.9, 
                             0.1 + (0.8 * (timeInMinutes - startTime) / (endTime - startTime))
                         );
@@ -116,6 +121,7 @@ exports.handler = async (event, context, callback) => {
                         } else {
                             resultEl.textContent = "Maybe next time! Keep working! 💪";
                             resultEl.style.color = "#F44336";
+                        }
                         }
                     }
                     
