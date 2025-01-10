@@ -81,13 +81,17 @@ exports.handler = async (event, context, callback) => {
                 button.addEventListener('click', async () => {
                     // Get current time and check if it's Friday first
                     const now = new Date();
+                    const currentDay = now.getDay();
+                    console.log('Current day:', currentDay, '(5 is Friday)');
                     
                     // Only allow on Fridays
-                    if (now.getDay() !== 5) {
+                    if (currentDay !== 5) {
+                        console.log('Not Friday - showing restriction message');
                         resultEl.textContent = "Nice try! This only works on Fridays! 😉";
                         resultEl.style.color = "#FF9800";
                         return;
                     }
+                    console.log('It is Friday - proceeding with time check');
                     
                     // Disable button during countdown
                     button.disabled = true;
