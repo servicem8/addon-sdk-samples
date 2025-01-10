@@ -79,6 +79,16 @@ exports.handler = async (event, context, callback) => {
                 const resultEl = document.getElementById('result');
                 
                 button.addEventListener('click', async () => {
+                    // Get current time and check if it's Friday first
+                    const now = new Date();
+                    
+                    // Only allow on Fridays
+                    if (now.getDay() !== 5) {
+                        resultEl.textContent = "Nice try! This only works on Fridays! 😉";
+                        resultEl.style.color = "#FF9800";
+                        return;
+                    }
+                    
                     // Disable button during countdown
                     button.disabled = true;
                     
@@ -90,17 +100,6 @@ exports.handler = async (event, context, callback) => {
                     
                     // Clear countdown
                     countdownEl.textContent = '';
-                    
-                    // Get current time and check if it's Friday
-                    const now = new Date();
-                    
-                    // Only allow on Fridays
-                    if (now.getDay() !== 5) {
-                        resultEl.textContent = "Nice try! This only works on Fridays! 😉";
-                        resultEl.style.color = "#FF9800";
-                        button.disabled = false;
-                        return;
-                    }
                     
                     // If it's Friday, proceed with time-based probability
                     const hour = now.getHours();
