@@ -78,9 +78,20 @@ exports.handler = async (event, context, callback) => {
                 const countdownEl = document.getElementById('countdown');
                 const resultEl = document.getElementById('result');
                 
+                // For testing: Allow date simulation
+                let simulatedDate = null;
+                window.setTestDate = (date) => {
+                    simulatedDate = date;
+                    console.log('Test date set to:', date.toLocaleString());
+                };
+                window.clearTestDate = () => {
+                    simulatedDate = null;
+                    console.log('Test date cleared - using real date');
+                };
+                
                 button.addEventListener('click', async () => {
                     // Get current time and check if it's Friday first
-                    const now = new Date();
+                    const now = simulatedDate || new Date();
                     const currentDay = now.getDay();
                     console.log('Current day:', currentDay, '(5 is Friday)');
                     
