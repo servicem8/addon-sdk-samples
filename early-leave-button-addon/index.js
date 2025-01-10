@@ -91,8 +91,11 @@ exports.handler = async (event, context, callback) => {
                 
                 button.addEventListener('click', async () => {
                     // Get current time and check if it's Friday first
-                    const now = simulatedDate || new Date();
-                    const currentDay = now.getDay();
+                    const now = new Date();
+                    // For testing: Uncomment the next line to simulate different days
+                    // const currentDay = 3; // Wednesday (3) for testing non-Friday
+                    const currentDay = 5; // Friday (5) for testing Friday scenario
+                    console.log('Testing with day:', currentDay, '(5 is Friday)');
                     console.log('Current day:', currentDay, '(5 is Friday)');
                     
                     // Only allow on Fridays
