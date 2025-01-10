@@ -90,13 +90,14 @@ exports.handler = async (event, context, callback) => {
                 };
                 
                 button.addEventListener('click', async () => {
-                    // Get current time and check if it's Friday first
-                    const now = new Date();
-                    const currentDay = now.getDay();
-                    console.log('Current day:', currentDay, '(5 is Friday)');
-                    
-                    // Only allow on Fridays
-                    if (currentDay !== 5) {
+                    try {
+                        // Get current time and check if it's Friday first
+                        const now = new Date();
+                        const currentDay = now.getDay();
+                        console.log('Current day:', currentDay, '(5 is Friday)');
+                        
+                        // Only allow on Fridays
+                        if (currentDay !== 5) {
                         console.log('Not Friday - showing restriction message');
                         resultEl.textContent = "Nice try! This only works on Fridays! 😉";
                         resultEl.style.color = "#FF9800";
@@ -145,10 +146,14 @@ exports.handler = async (event, context, callback) => {
                             resultEl.style.color = "#F44336";
                         }
                         }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        resultEl.textContent = "Oops! Something went wrong. Please try again.";
+                        resultEl.style.color = "#F44336";
+                    } finally {
+                        // Re-enable button
+                        button.disabled = false;
                     }
-                    
-                    // Re-enable button
-                    button.disabled = false;
                 });
             });
         </script>
