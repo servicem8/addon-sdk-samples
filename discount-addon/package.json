@@ -1,0 +1,16 @@
+{
+  "name": "discount-addon",
+  "version": "1.0.0",
+  "description": "ServiceM8 addon for applying discounts to job materials",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  }
+}
