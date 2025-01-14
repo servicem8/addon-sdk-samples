@@ -1,31 +1,20 @@
 {
-    "uuid": "discount-addon",
     "name": "Discount Add-on",
     "version": "1.0.0",
-    "icon_url": "https://cdn-icons-png.flaticon.com/512/9715/9715374.png",
-    "support_email": "support@servicem8.com",
-    "support_url": "https://www.servicem8.com/support",
-    "oauth_scopes": [
-        "read_job_materials",
-        "manage_job_materials"
-    ],
+    "iconURL": "https://cdn-icons-png.flaticon.com/512/9715/9715374.png",
+    "supportEmail": "support@servicem8.com",
+    "supportURL": "https://www.servicem8.com/support",
+    "oauth": {
+        "scope": "read_job_materials manage_job_materials"
+    },
     "actions": [
         {
             "event": "apply_discount",
             "name": "Apply Discount",
             "description": "Add a discount line to job materials",
-            "icon_url": "https://cdn-icons-png.flaticon.com/512/9715/9715374.png",
+            "iconURL": "https://cdn-icons-png.flaticon.com/512/9715/9715374.png",
             "entity": "job",
             "type": "online",
-            "location": "job_action"
-        },
-        {
-            "event": "apply_discount",
-            "name": "Apply Discount",
-            "description": "Add a discount line to job materials",
-            "icon_url": "https://cdn-icons-png.flaticon.com/512/9715/9715374.png",
-            "entity": "job",
-            "type": "app",
             "location": "job_action"
         }
     ]
