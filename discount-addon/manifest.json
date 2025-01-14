@@ -9,14 +9,13 @@
     },
     "actions": [
         {
-            "event": "apply_discount_web",
-            "name": "Apply Discount (Web)",
-            "description": "Add a discount line to job materials via web service",
+            "event": "apply_discount",
+            "name": "Apply Discount",
+            "description": "Add a discount line to job materials",
             "iconURL": "https://cdn-icons-png.flaticon.com/512/9715/9715374.png",
             "entity": "job",
             "type": "online",
-            "location": "job_action",
-            "endpoint": "http://localhost:3000/discount-ui"
+            "location": "job_action"
         }
     ]
 }
