@@ -2,16 +2,52 @@
 
 const request = require('request');
 
-exports.handler = (event, context, callback) => {
-    console.log('Received event:', JSON.stringify(event, null, 2));
+// Constants
+const DISCOUNT_ITEM_CODE = 'Discount';
+const API_BASE_URL = 'https://api.servicem8.com/api_1.0';
+const EVENTS = {
+    APPLY_DISCOUNT: 'apply_discount',
+    CALCULATE_DISCOUNT: 'calculate_discount',
+    APPLY_DISCOUNT_MATERIAL: 'apply_discount_material'
+};
 
-    // Handle the apply_discount event
-    if (event.eventName === 'apply_discount') {
-        showDiscountUI(event, callback);
-    } else if (event.eventName === 'calculate_discount') {
-        calculateDiscount(event, callback);
-    } else if (event.eventName === 'apply_discount_material') {
-        applyDiscountMaterial(event, callback);
+// Helper function to calculate discount amount
+function calculateDiscountAmount(currentTotal, discountType, discountValue) {
+    if (discountType === 'percentage') {
+        return currentTotal * (discountValue / 100);
+    }
+    return discountValue;
+}
+
+// Helper function to format discount name
+function formatDiscountName(discountType, discountValue) {
+    if (discountType === 'percentage') {
+        return `${discountValue}% Discount`;
+    }
+    return `$${parseFloat(discountValue).toFixed(2)} Discount`;
+}
+
+// Helper function to handle API errors consistently
+function handleApiError(error, callback, context = '') {
+    console.error(`API Error ${context}:`, error);
+    callback(error);
+}
+
+exports.handler = (event, context, callback) => {
+    // Handle events based on type
+    switch (event.eventName) {
+    case EVENTS.APPLY_DISCOUNT:
+        return showDiscountUI(event, callback);
+    case EVENTS.CALCULATE_DISCOUNT:
+        return calculateDiscount(event, callback);
+    case EVENTS.APPLY_DISCOUNT_MATERIAL:
+        return applyDiscountMaterial(event, callback);
+    default:
+        return handleApiError(
+            new Error(`Unsupported event: ${event.eventName}`),
+            callback,
+            'Event Handler'
+        );
     }
 };
 
@@ -54,26 +90,39 @@ function showDiscountUI(event, callback) {
                 });
             }
             
-            function getDiscountType() {
+            // UI Helper Functions
+            function getSelectedDiscountType() {
                 return document.querySelector('input[name="discountType"]:checked').value;
             }
             
-            function getDiscountValue() {
+            function getRawDiscountValue() {
                 return document.getElementById('discountValue').value;
             }
             
-            function formatCurrency(amount) {
-                return '$' + parseFloat(amount).toFixed(2);
+            function formatCurrencyAmount(currencyAmount) {
+                const value = parseFloat(currencyAmount);
+                return isNaN(value) ? '$0.00' : '$' + value.toFixed(2);
+            }
+            
+            function validateDiscountInput(value) {
+                const numericValue = parseFloat(value);
+                return !isNaN(numericValue) && numericValue > 0;
+            }
+            
+            function showError(show = true) {
+                document.getElementById('error').style.display = show ? 'block' : 'none';
             }
             
             function applyDiscount() {
-                const discountType = getDiscountType();
-                const discountValue = getDiscountValue();
+                const discountType = getSelectedDiscountType();
+                const discountValue = getRawDiscountValue();
                 
-                if (!discountValue || isNaN(discountValue) || discountValue <= 0) {
-                    document.getElementById('error').style.display = 'block';
+                if (!validateDiscountInput(discountValue)) {
+                    showError(true);
                     return;
                 }
+                
+                showError(false);
                 
                 document.getElementById('error').style.display = 'none';
                 
@@ -132,122 +181,99 @@ function showDiscountUI(event, callback) {
     });
 }
 
-function calculateDiscount(event, callback) {
-    const jobUUID = event.eventArgs.jobUUID;
-    const discountType = event.eventArgs.discountType;
-    const discountValue = parseFloat(event.eventArgs.discountValue) || 0;
+// Helper function to get job materials
+function getJobMaterials(jobUUID, accessToken) {
+    return new Promise((resolve, reject) => {
+        const options = {
+            method: 'GET',
+            url: `${API_BASE_URL}/jobmaterial.json?$filter=job_uuid eq '${jobUUID}'`,
+            auth: { bearer: accessToken }
+        };
 
-    // Get current job materials to calculate total
-    const options = {
-        method: 'GET',
-        url: `https://api.servicem8.com/api_1.0/jobmaterial.json?$filter=job_uuid eq '${jobUUID}'`,
-        auth: {
-            bearer: event.auth.accessToken
-        }
-    };
-
-    request(options, function(error, response, body) {
-        if (error) {
-            return callback(error);
-        }
-
-        const materials = JSON.parse(body);
-        let currentTotal = 0;
-
-        // Calculate current total excluding any existing discounts
-        materials.forEach(material => {
-            if (material.item_code !== 'Discount') {
-                currentTotal += parseFloat(material.quantity) * parseFloat(material.price || 0);
+        request(options, (error, response, body) => {
+            if (error) return reject(error);
+            try {
+                resolve(JSON.parse(body));
+            } catch (e) {
+                reject(e);
             }
-        });
-
-        // Calculate discount amount
-        let discountAmount = 0;
-        if (discountType === 'percentage') {
-            discountAmount = currentTotal * (discountValue / 100);
-        } else {
-            discountAmount = discountValue;
-        }
-
-        const finalTotal = currentTotal - discountAmount;
-
-        callback(null, {
-            eventResponse: JSON.stringify({
-                currentTotal: currentTotal,
-                discountAmount: discountAmount,
-                finalTotal: finalTotal
-            })
         });
     });
 }
 
-function applyDiscountMaterial(event, callback) {
-    const jobUUID = event.eventArgs.jobUUID;
-    const discountType = event.eventArgs.discountType;
-    const discountValue = parseFloat(event.eventArgs.discountValue);
-
-    // First calculate the actual discount amount
-    const options = {
-        method: 'GET',
-        url: `https://api.servicem8.com/api_1.0/jobmaterial.json?$filter=job_uuid eq '${jobUUID}'`,
-        auth: {
-            bearer: event.auth.accessToken
+// Helper function to calculate total excluding discounts
+function calculateTotalExcludingDiscounts(materials) {
+    return materials.reduce((total, material) => {
+        if (material.item_code !== DISCOUNT_ITEM_CODE) {
+            return total + (parseFloat(material.quantity) * parseFloat(material.price || 0));
         }
-    };
+        return total;
+    }, 0);
+}
 
-    request(options, function(error, response, body) {
-        if (error) {
-            return callback(error);
-        }
+function calculateDiscount(event, callback) {
+    const { jobUUID, discountType } = event.eventArgs;
+    const discountValue = parseFloat(event.eventArgs.discountValue) || 0;
 
-        const materials = JSON.parse(body);
-        let currentTotal = 0;
-
-        // Calculate current total excluding any existing discounts
-        materials.forEach(material => {
-            if (material.item_code !== 'Discount') {
-                currentTotal += parseFloat(material.quantity) * parseFloat(material.price || 0);
-            }
-        });
-
-        // Calculate discount amount
-        let discountAmount = 0;
-        let discountName = '';
-        if (discountType === 'percentage') {
-            discountAmount = currentTotal * (discountValue / 100);
-            discountName = `${discountValue}% Discount`;
-        } else {
-            discountAmount = discountValue;
-            discountName = `$${discountValue.toFixed(2)} Discount`;
-        }
-
-        // Create the discount material
-        const createOptions = {
-            method: 'POST',
-            url: 'https://api.servicem8.com/api_1.0/jobmaterial.json',
-            auth: {
-                bearer: event.auth.accessToken
-            },
-            json: true,
-            body: {
-                job_uuid: jobUUID,
-                quantity: '-1',
-                price: discountAmount.toString(),
-                item_code: 'Discount',
-                name: discountName
-            }
-        };
-
-        request(createOptions, function(error) {
-            if (error) {
-                return callback(error);
-            }
+    getJobMaterials(jobUUID, event.auth.accessToken)
+        .then(materials => {
+            const currentTotal = calculateTotalExcludingDiscounts(materials);
+            const discountAmount = calculateDiscountAmount(currentTotal, discountType, discountValue);
+            const finalTotal = currentTotal - discountAmount;
 
             callback(null, {
                 eventResponse: JSON.stringify({
-                    success: true
+                    currentTotal,
+                    discountAmount,
+                    finalTotal
                 })
             });
+        })
+        .catch(error => callback(error));
+}
+
+function applyDiscountMaterial(event, callback) {
+    const { jobUUID, discountType } = event.eventArgs;
+    const discountValue = parseFloat(event.eventArgs.discountValue);
+
+    if (!discountValue || isNaN(discountValue)) {
+        return callback(new Error('Invalid discount value'));
+    }
+
+    getJobMaterials(jobUUID, event.auth.accessToken)
+        .then(materials => {
+            const currentTotal = calculateTotalExcludingDiscounts(materials);
+
+            const discountAmount = calculateDiscountAmount(currentTotal, discountType, discountValue);
+            const discountName = formatDiscountName(discountType, discountValue);
+
+            // Create the discount material
+            const createOptions = {
+                method: 'POST',
+                url: `${API_BASE_URL}/jobmaterial.json`,
+                auth: {
+                    bearer: event.auth.accessToken
+                },
+                json: true,
+                body: {
+                    job_uuid: jobUUID,
+                    quantity: '-1',
+                    price: discountAmount.toString(),
+                    item_code: DISCOUNT_ITEM_CODE,  // Using constant for consistency
+                    name: discountName
+                }
+            };
+
+            request(createOptions, function(error) {
+                if (error) {
+                    return callback(error);
+                }
+
+                callback(null, {
+                    eventResponse: JSON.stringify({
+                        success: true
+                    })
+                });
+            });
         });
-    });
 }
