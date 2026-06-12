@@ -1,25 +1,24 @@
 'use strict';
 
-//Include the request module so we're able to easily make API requests (note Request module is included for Simple Functions, but if you need any other modules you'll need to use AWS Lambda instead)
-var request = require("request");
-
 /**
  * exports.handler is called for every event, determine which event was called, and route to function for handling
  * 
  * Note: event.eventName is always lower-case.
  */
-exports.handler = (event, context, callback) => {
+exports.handler = async (event) => {
     
 	//Route Event based on event name
 	if(event.eventName == 'showcase_main_menu') {
 		//Showcase_Main_Menu was defined in the manifest.json as the event to run on Job Action Popup
-	   showMainMenu(event, callback);
+	   return showMainMenu(event);
 	   
 	} else if(event.eventName == 'request_job_data_event') {
 		//request_job_data_event is called from the client-side client.invoke() function on the main menu event
-		requestJobData(event, callback);
+		return requestJobData(event);
 		
 	}
+
+	return {};
 	
 };
   
@@ -27,9 +26,9 @@ exports.handler = (event, context, callback) => {
  * Job Action Main Menu
  * 
  * Simple functions can render HTML content into a Job/Client Action popup window. This could be simple static HTML, or dynamic by using the event data context about the currently open job card.
- * If you wish to make event requests after the initial event has loaded, make sure to include the ServiceM8 Client SDK in your HTML, so you can use the invoke function to pass data back to your server-side simple function.
+ * If you wish to make event requests after the initial event has loaded, make sure to include the ServiceM8 Client SDK in your HTML, so you can use the invoke function to pass data back to your server-side Simple Function.
  */
-function showMainMenu(event, callback) {
+function showMainMenu(event) {
 
     var strHTMLResponse = `
 <html>
@@ -89,9 +88,9 @@ function showMainMenu(event, callback) {
 `;
     
 	//Return Response
-    callback(null, { 
+    return {
 		eventResponse: strHTMLResponse
-	});
+	};
 	
 }
 
@@ -100,7 +99,7 @@ function showMainMenu(event, callback) {
  * 
  * We're able to request job data from the API because each event is issued with a temporary accessToken (event.auth.accessToken), and know the job UUID because we passed it from the main menu event (event.eventArgs.jobUUID)
  */
-function requestJobData(event, callback) {
+async function requestJobData(event) {
 	
   var options = { 
 	  method: 'GET',
@@ -111,22 +110,34 @@ function requestJobData(event, callback) {
   };
 
   //Make Request to ServiceM8 API
-  request(options, function (error, response, body) {
+  var response;
+  try {
+	response = await requestAsync(options);
+  } catch (error) {
+	throw new Error("Unable to retrieve job [" + event.eventArgs.jobUUID + "] [" + error + "]");
+  }
     
-	 if (error) {
-		//Handle Error
-		return callback("Unable to retrieve job [" + event.eventArgs.jobUUID + "] [" + error + "]");
-	 }
-	
 	//Parse Job Data
-	 var jobData = JSON.parse(body);
+	 var jobData = JSON.parse(response.body);
 	
 	 //Success - Return Job JSON as the Response
-     callback(null, { 
+     return {
 		eventResponse: JSON.stringify(jobData, null, 2)
-	 });
+	 };
 	
-  });
-	
+}
+
+function requestAsync(options) {
+	var headers = {};
+	if (options.auth && options.auth.bearer) {
+		headers.Authorization = 'Bearer ' + options.auth.bearer;
+	}
+
+	return fetch(options.url, {headers}).then(async (response) => {
+		return {
+			response: {statusCode: response.status},
+			body: await response.text()
+		};
+	});
 }
   
