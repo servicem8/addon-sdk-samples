@@ -17,9 +17,7 @@
  *
  */
 
-var request = require("request");
-
-exports.handler = (event, context, callback) => {
+exports.handler = async (event) => {
 
     /**
      * In this example, our handler function doesn't do any work itself, but instead just inspects the event name
@@ -35,14 +33,12 @@ exports.handler = (event, context, callback) => {
      */
     switch(event.eventName) {
         case 'pool_calc_start':
-            handlePoolCalcStart(event, callback);
-            break;
+            return handlePoolCalcStart(event);
         case 'pool_calc_calculate':
-            handlePoolCalcCalculate(event, callback);
-            break;
+            return handlePoolCalcCalculate(event);
         default:
             // Unknown event name
-            callback(null, {});
+            return {};
     }
 
 };
@@ -51,9 +47,8 @@ exports.handler = (event, context, callback) => {
  * Produce the HTML and Javascript which renders the interface for the Pool Calculator
  *
  * @param event
- * @param callback
  */
-function handlePoolCalcStart (event, callback) {
+function handlePoolCalcStart (event) {
     // We need to know the Job UUID in order to post a Note to the job
     var strJobUUID = event.eventArgs.jobUUID;
 
@@ -136,7 +131,7 @@ function handlePoolCalcStart (event, callback) {
      * javascript and CSS includes etc. You could include that all in the single function, but we've broken it out
      * for clarity.
      */
-    callback(null, {eventResponse: wrapResponse(strHTML, strJS)});
+    return {eventResponse: wrapResponse(strHTML, strJS)};
 }
 
 /**
@@ -145,9 +140,8 @@ function handlePoolCalcStart (event, callback) {
  *
  *
  * @param event
- * @param callback
  */
-function handlePoolCalcCalculate(event, callback) {
+async function handlePoolCalcCalculate(event) {
 
     /**
      * Event arguments specified in the second argument of client.invoke() are available in the
@@ -199,7 +193,7 @@ function handlePoolCalcCalculate(event, callback) {
             + "\n\nRecommendation = " + strRecommend;
 
         // Now post a Note to the Notes endpoint
-        request.post({
+        var noteResponse = await requestPost({
             url: 'https://api.servicem8.com/api_1.0/Note.json',
             auth: {
                 bearer: event.auth.accessToken // We can use the temporary access token issued to us for authentication
@@ -209,26 +203,44 @@ function handlePoolCalcCalculate(event, callback) {
                 related_object_uuid: strJobUUID, // This is why we needed to persist the job_uuid through the Pool Calc form
                 note: strNote
             }
-        }, (err, httpResponse, body) => {
-
-            // Check whether the request succeeded
-            let boolNotePosted = (httpResponse.statusCode == 200),
-                strNotePosted = boolNotePosted ? '<p>Note has been posted to the Job Diary</p>' : '<p>Unable to post Note to Job Diary: <pre>' + body + '</pre></p>';
-
-            // Now we can return from the Lambda function by calling the "callback" function
-            callback(null, {eventResponse: '<h1>' + strOutput + '</h1>' + strNotePosted});
-
         });
+
+        // Check whether the request succeeded
+        let boolNotePosted = (noteResponse.httpResponse.statusCode == 200),
+            strNotePosted = boolNotePosted ? '<p>Note has been posted to the Job Diary</p>' : '<p>Unable to post Note to Job Diary: <pre>' + noteResponse.body + '</pre></p>';
+
+        return {eventResponse: '<h1>' + strOutput + '</h1>' + strNotePosted};
 
     } else {
 
         /**
          * Otherwise, we dont have a recommendation so return immediately.
          */
-        callback(null, {eventResponse: '<h1>' + strOutput + '</h1>'});
+        return {eventResponse: '<h1>' + strOutput + '</h1>'};
 
     }
 
+}
+
+async function requestPost(options) {
+    var headers = {};
+    if (options.auth && options.auth.bearer) {
+        headers.Authorization = 'Bearer ' + options.auth.bearer;
+    }
+
+    var response = await fetch(options.url, {
+        method: 'POST',
+        headers: {
+            ...headers,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams(options.form)
+    });
+
+    return {
+        httpResponse: {statusCode: response.status},
+        body: await response.text()
+    };
 }
 
 /**
