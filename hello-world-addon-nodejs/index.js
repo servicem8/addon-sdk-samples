@@ -1,6 +1,6 @@
 'use strict';
 
-exports.handler = (event, context, callback) => {
+exports.handler = async (event) => {
     
     console.log('Received event:', JSON.stringify(event, null, 2));
 
@@ -29,8 +29,8 @@ exports.handler = (event, context, callback) => {
 </html>`;
     
 	//Return Response
-    callback(null, { 
+    return {
 		eventResponse: strHTMLResponse
-	});
+	};
     
 };
