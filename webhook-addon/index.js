@@ -1,5 +1,4 @@
 'use strict';
-var request = require('request');
 
 /**
  * ServiceM8 SDK Example: Attachment Add-on
@@ -19,7 +18,7 @@ var request = require('request');
  * needing to manage any infrastructure or worry about implementing OAuth.
  *
  */
-exports.handler = (event, context, callback) => {
+exports.handler = async (event) => {
 
     /**
      * An add-on may register multiple webhooks and actions in its manifest file, but it has only a single Lambda
@@ -32,10 +31,9 @@ exports.handler = (event, context, callback) => {
      */
     if (event.eventName != 'webhook_subscription') {
         /**
-         * Lambda functions are ended by calling the `callback` function provided as an argument. The second parameter
-         * is the "result" of the function. We leave it empty here because no actions were taken.
+         * Return an empty result because no actions were taken.
          */
-        callback(null, {});
+        return {};
     }
 
     /**
@@ -55,120 +53,146 @@ exports.handler = (event, context, callback) => {
      * This also demonstrates how to use the Temporary OAuth token that is issued for this event. As described in the
      * OAuth 2.0 spec, access tokens should be provided in the HTTP "Authorization" header with the prefix "Bearer ".
      */
-    request.get({
+    var attachmentsResponse = await requestGet({
         url: 'https://api.servicem8.com/api_1.0/Attachment.json?' + encodeURIComponent('$filter') + '=' + encodeURIComponent('related_object_uuid eq \'' + strJobUUID + '\''),
         headers: {
             // Use the temporary Access Token that was issued for this event
             'Authorization': 'Bearer ' + strAccessToken
         }
-    },function(err, httpResponse, body) {
-
-        /**
-         * The API will always return a HTTP 200 on success. If this isn't found, something went wrong during the query
-         * and we need to end our Lambda function here.
-         */
-        if (httpResponse.statusCode != 200) {
-            // Unable to query attachment records
-            callback(null, {error: "Unable to query attachment records for this job, received HTTP " + httpResponse.statusCode + "\n\n" + body});
-            return;
-        }
-
-        /**
-         * Loop over the returned results and check if any had attachment_name == "ServiceM8 Logo".
-         */
-        var arrRecords = JSON.parse(body);
-        var boolFound = false;
-        for (var thisRecord of arrRecords) {
-            if (thisRecord.attachment_name == 'ServiceM8 Logo') {
-                boolFound = true;
-                break;
-            }
-        }
-
-        if (boolFound) {
-            // Attachment record already exists
-            callback(null, {error: "Attachment already exists for this job"});
-            return;
-        }
-
-        /**
-         * If we get to here, there were no attachments on the job which matched our filter, so we need to create a new
-         * one.
-         *
-         * Attachments are added in two stages: first we create the attachment record which specifies the name, filetype
-         * and the record which it is attached to. Then we can upload the file data for that attachment.
-         */
-        request.post({
-            url: 'https://api.servicem8.com/api_1.0/Attachment.json',
-            headers: {
-                // Use the temporary Access Token that was issued for this event
-                'Authorization': 'Bearer ' + strAccessToken
-            },
-            form: {
-                related_object: 'job',
-                related_object_uuid: strJobUUID,
-                attachment_name: 'ServiceM8 Logo',
-                file_type: '.png'
-            }
-        }, function(err, httpResponse, body) {
-
-            if (httpResponse.statusCode != 200) {
-                // Attachment record failed to create
-                callback(null, {error: "Unable to create attachment record, received HTTP " + httpResponse.statusCode + "\n\n" + body});
-                return;
-            }
-
-            /**
-             * When new records are created on the REST API, the UUID is returned in the "x-record-uuid" HTTP header. We
-             * inspect this header to get the record's UUID, as we need to know it in order to upload the file data.
-             */
-            var strAttachmentUUID = httpResponse.headers['x-record-uuid'];
-            if (!strAttachmentUUID) {
-                // Unable to determine record UUID
-                callback(null, {error: "Unable to create attachment record, no x-record-uuid received in header"});
-                return;
-            }
-
-            /**
-             * Now we need to get the file data that we are going to attach. In this example we just fetch the ServiceM8
-             * logo from a static URL. In a real add-on, you would likely be fetching your file data from some other API
-             * or web service, or reading it from a storage service like Amazon S3.
-             *
-             */
-            request.get({
-                url: 'https://www.servicem8.com/images/servicem8_logo.png',
-                encoding: null // We need to specify null encoding so that the Request library interprets the response as binary (otherwise it would be interpreted as UTF-8 encoded text)
-            }, function(err, httpResponse, body) {
-
-                if (httpResponse.statusCode != 200) {
-                    // Couldn't download file
-                    callback(null, {error: "Unable to download PDF file, received HTTP " + httpResponse.statusCode + "\n\n" + body});
-                    return;
-                }
-
-                // The file data is contained in the "body" argument of the callback, we just need to post that to the Attachments endpoint
-                request.post({
-                    url: 'https://api.servicem8.com/api_1.0/Attachment/' + strAttachmentUUID + '.file',
-                    headers: {
-                        // Use the temporary Access Token that was issued for this event
-                        'Authorization': 'Bearer ' + strAccessToken
-                    },
-                    body: body
-                }, function (err, httpResponse, body) {
-
-                    if (httpResponse.statusCode != 200) {
-                        // Couldn't download file
-                        callback(null, {error: "Unable to post PDF file, received HTTP " + httpResponse.statusCode + "\n\n" + body});
-                        return;
-                    }
-
-                    // Upload succeeded!
-                    callback(null, {result: "Added attachment to job " + strJobUUID});
-
-                })
-            });
-
-        });
     });
 
+    /**
+     * The API will always return a HTTP 200 on success. If this isn't found, something went wrong during the query
+     * and we need to end our Lambda function here.
+     */
+    if (attachmentsResponse.httpResponse.statusCode != 200) {
+        // Unable to query attachment records
+        return {error: "Unable to query attachment records for this job, received HTTP " + attachmentsResponse.httpResponse.statusCode + "\n\n" + attachmentsResponse.body};
+    }
+
+    /**
+     * Loop over the returned results and check if any had attachment_name == "ServiceM8 Logo".
+     */
+    var arrRecords = JSON.parse(attachmentsResponse.body);
+    var boolFound = false;
+    for (var thisRecord of arrRecords) {
+        if (thisRecord.attachment_name == 'ServiceM8 Logo') {
+            boolFound = true;
+            break;
+        }
+    }
+
+    if (boolFound) {
+        // Attachment record already exists
+        return {error: "Attachment already exists for this job"};
+    }
+
+    /**
+     * If we get to here, there were no attachments on the job which matched our filter, so we need to create a new
+     * one.
+     *
+     * Attachments are added in two stages: first we create the attachment record which specifies the name, filetype
+     * and the record which it is attached to. Then we can upload the file data for that attachment.
+     */
+    var createResponse = await requestPost({
+        url: 'https://api.servicem8.com/api_1.0/Attachment.json',
+        headers: {
+            // Use the temporary Access Token that was issued for this event
+            'Authorization': 'Bearer ' + strAccessToken
+        },
+        form: {
+            related_object: 'job',
+            related_object_uuid: strJobUUID,
+            attachment_name: 'ServiceM8 Logo',
+            file_type: '.png'
+        }
+    });
+
+    if (createResponse.httpResponse.statusCode != 200) {
+        // Attachment record failed to create
+        return {error: "Unable to create attachment record, received HTTP " + createResponse.httpResponse.statusCode + "\n\n" + createResponse.body};
+    }
+
+    /**
+     * When new records are created on the REST API, the UUID is returned in the "x-record-uuid" HTTP header. We
+     * inspect this header to get the record's UUID, as we need to know it in order to upload the file data.
+     */
+    var strAttachmentUUID = createResponse.httpResponse.headers['x-record-uuid'];
+    if (!strAttachmentUUID) {
+        // Unable to determine record UUID
+        return {error: "Unable to create attachment record, no x-record-uuid received in header"};
+    }
+
+    /**
+     * Now we need to get the file data that we are going to attach. In this example we just fetch the ServiceM8
+     * logo from a static URL. In a real add-on, you would likely be fetching your file data from some other API
+     * or web service, or reading it from a storage service like Amazon S3.
+     *
+     */
+    var fileResponse = await requestGet({
+        url: 'https://www.servicem8.com/images/servicem8_logo.png',
+        encoding: null // We need to specify null encoding so that the Request library interprets the response as binary (otherwise it would be interpreted as UTF-8 encoded text)
+    });
+
+    if (fileResponse.httpResponse.statusCode != 200) {
+        // Couldn't download file
+        return {error: "Unable to download PDF file, received HTTP " + fileResponse.httpResponse.statusCode + "\n\n" + fileResponse.body};
+    }
+
+    // The file data is contained in the "body" value, we just need to post that to the Attachments endpoint
+    var uploadResponse = await requestPost({
+        url: 'https://api.servicem8.com/api_1.0/Attachment/' + strAttachmentUUID + '.file',
+        headers: {
+            // Use the temporary Access Token that was issued for this event
+            'Authorization': 'Bearer ' + strAccessToken
+        },
+        body: fileResponse.body
+    });
+
+    if (uploadResponse.httpResponse.statusCode != 200) {
+        // Couldn't upload file
+        return {error: "Unable to post PDF file, received HTTP " + uploadResponse.httpResponse.statusCode + "\n\n" + uploadResponse.body};
+    }
+
+    // Upload succeeded!
+    return {result: "Added attachment to job " + strJobUUID};
+
 };
+
+function requestGet(options) {
+    var headers = {...(options.headers || {})};
+
+    return fetch(options.url, {headers}).then(async (response) => {
+        return {
+            httpResponse: {
+                statusCode: response.status,
+                headers: Object.fromEntries(response.headers.entries())
+            },
+            body: options.encoding === null ? Buffer.from(await response.arrayBuffer()) : await response.text()
+        };
+    });
+}
+
+function requestPost(options) {
+    var headers = {...(options.headers || {})};
+    var body = options.body;
+
+    if (options.form) {
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        body = new URLSearchParams(options.form);
+    }
+
+    return fetch(options.url, {
+        method: 'POST',
+        headers,
+        body
+    }).then(async (response) => {
+        return {
+            httpResponse: {
+                statusCode: response.status,
+                headers: Object.fromEntries(response.headers.entries())
+            },
+            body: await response.text()
+        };
+    });
+}
